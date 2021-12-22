@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  storage-service:
+    container_name: str
+    build: ./
+    networks:
+      - storage-service-network
+      - todo-app-network
+    volumes:
+      - ./app:/app
+      - client-storage:/client-storage 
+      - quarantine-storage:/quarantine-storage
+    ports:
+      - 3000:3000
+      - 8080:8080
+      - 5678:5678
+      - 9229:9229
+      - 9219:9219
+
+  storage-couchbase-db:
+    container_name: storage-couchbase-db
+    image: couchbase
+    networks:
+      - storage-service-network
+    volumes:
+      - storage-couchbase-vol:/opt/couchbase/var
+    ports:
+      - "8091-8094:8091-8094"
+      - "11210:11210"
+
+networks:
+  storage-service-network:
+    name: storage-service-network
+  todo-app-network:
+    name: todo-app-network
+
+volumes:
+  storage-couchbase-vol:
+    name: storage-couchbase-vol
+  client-storage: 
+    name: client-storage
+  quarantine-storage: 
+    name: quarantine-storage
