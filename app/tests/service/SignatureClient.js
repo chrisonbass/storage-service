@@ -26,25 +26,20 @@ describe("Signature Client", () => {
     const wait = async (seconds) => {
         return new Promise((resolve, reject) => {
             setTimeout(() => { 
-                console.log("Timeout complete")
                 resolve(true); 
             }, seconds * 1000);
         });
     };
     it("#expiresMessage", async () => {
         const expireResult = await client.createSignedMessage(testMessage, 3);
-        console.log("Waiting for message to expire");
-        const waiter = await wait(5);
-        console.log("Wait is over");
+        const waiter = await wait(4);
         let valid;
         try {
             valid = await client.decryptSignedMessage(expireResult);
-            console.log(valid);
             valid = valid && valid.message ? true : false;
         } catch (e) {
-            console.error("error validating message", e);
             valid = false;
         }
         equal(valid, false);
-    }).timeout(13000);
+    }).timeout(8000);
 });

@@ -3,7 +3,7 @@ import SignatureClient from './SignatureClient';
 
 const client = new SignatureClient();
 
-const DEFAULT_MAX_FILESIZE = 50 * 1000 * 1000; // 50 mb
+export const DEFAULT_MAX_FILESIZE = 50 * 1000 * 1000; // 50 mb
 const DEFAULT_CALLBACK = "no-callback";
 
 export default class Storage {
@@ -42,5 +42,10 @@ export default class Storage {
 
     async getSignedFileUploadUrl(options = {}){
         const signature = await this.createFileUpload(options);
+        return this.getSignedFileUploadUrlFromSignature(signature);
+    }
+
+    getSignedFileUploadUrlFromSignature({key, signature}){
+        return `http://localhost:7000/v1/upload?key=${key}&signature=${signature}`;
     }
 }

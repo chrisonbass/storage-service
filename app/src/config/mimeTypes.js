@@ -1,4 +1,4 @@
-export default mimeTypes = [
+const mimeTypes = [
     {"ext": ".aac", "description" : "AAC audio", "mime": "audio/aac"},
     {"ext": ".mid", "description" : "Musical Instrument Digital Interface (MIDI)", "mime": "audio/midi"},
     {"ext": ".midi", "description" : "Musical Instrument Digital Interface (MIDI)", "mime": "audio/x-midi"},
@@ -75,3 +75,16 @@ export default mimeTypes = [
     {"ext": ".zip", "description" : "ZIP archive", "mime": "application/zip"},
     {"ext": ".7z", "description" : "7-zip archive", "mime": "application/x-7z-compressed"}
 ];
+
+export const isValidMimeType = (mimeType) => {
+    let valid = false;
+    for (let i = 0; i < mimeTypes.length; i++) {
+        if (mimeTypes[i].mime === `${mimeType}`.trim().toLowerCase()) {
+            valid = true;
+            break;
+        }
+    }
+    return valid;
+};
+
+export default mimeTypes;

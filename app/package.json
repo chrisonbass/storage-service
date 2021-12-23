@@ -1,17 +1,17 @@
 {
   "name": "storage-service",
   "version": "1.0.0",
+  "author": "Chris Moss",
+  "license": "ISC",
   "description": "Simple storage proxy service for standardizing uploads and file scanning",
   "main": "server.js",
   "scripts": {
-    "test": "mocha tests",
+    "test": "mocha --recursive tests",
     "predebug": "npm install",
     "debug": "node --inspect=0.0.0.0 server.js",
     "prestart": "npm install",
     "start": "node server.js"
   },
-  "author": "Chris Moss",
-  "license": "ISC",
   "dependencies": {
     "express": "^4.17.2",
     "file-type": "^17.0.2",
