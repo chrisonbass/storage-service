@@ -35,7 +35,7 @@ export default class SignatureClient {
         const signedUrl = this.getSignedUrl({key, signature})
         const results = await callApi(`${signedUrl}`);
         this.lastResult = results && results.message;
-        return results;
+        return results && results.message;
     }
 
     getSignedUrl({key, signature}) {

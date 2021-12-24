@@ -1,5 +1,5 @@
-import {isValidMimeType} from "../config/mimeTypes";
-import respondWithCode from "../util/respondWithCode";
+import {isValidMimeType} from "../config/mimeTypes.js";
+import respondWithCode from "../util/respondWithCode.js";
 /**
  * Express Middleware - validates signed file upload url request
  * Requires:

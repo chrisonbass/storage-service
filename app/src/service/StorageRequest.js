@@ -1,5 +1,5 @@
-import FileUploadRequest from "../model/FileUploadRequest";
-import Storage from "./Storage";
+import FileUploadRequest from "../model/FileUploadRequest.js";
+import Storage from "./Storage.js";
 
 const service = new Storage();
 

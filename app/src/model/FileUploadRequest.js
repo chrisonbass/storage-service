@@ -9,7 +9,7 @@ export default class FileUploadRequest {
         this.name = name;
         this.mimeType = mimeType;
         this.destination = destination;
-        this.status = FileUploadStatus.STARTED;
+        this.status = FileUploadStatus.REQUESTED;
     }
 
     async save(){

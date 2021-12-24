@@ -1,5 +1,5 @@
 import fs from 'fs';
-import SignatureClient from './SignatureClient';
+import SignatureClient from './SignatureClient.js';
 
 const client = new SignatureClient();
 
@@ -46,6 +46,8 @@ export default class Storage {
     }
 
     getSignedFileUploadUrlFromSignature({key, signature}){
-        return `http://localhost:7000/v1/upload?key=${key}&signature=${signature}`;
+        const k = encodeURIComponent(key);
+        const s = encodeURIComponent(signature);
+        return `http://localhost:8000/v1/upload?key=${k}&signature=${s}`;
     }
 }
