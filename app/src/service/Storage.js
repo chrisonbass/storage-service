@@ -1,42 +1,20 @@
 import fs from 'fs';
+import execCommand from '../util/execCommand.js';
 import SignatureClient from './SignatureClient.js';
 
 const client = new SignatureClient();
 
-export const DEFAULT_MAX_FILESIZE = 50 * 1000 * 1000; // 50 mb
-const DEFAULT_CALLBACK = "no-callback";
+const QUAR_STORE = "quarantine-storage";
+const CLIENT_STORE = "client-storage";
 
 export default class Storage {
     /**
      * Creates a signed url that can be used for 
      */
-    async createFileUpload({
-            name, //required
-            mimeType, //required
-            destination, //required
-            maxFileSize, //optional
-            callback //optional
-        }) {
-        /**
-         * TODO: finalize options
-         * Options ideas
-         * 
-         * name: // filename
-         * mimetype // mimetype of file
-         * destination: // client volume: final destination of file after scan
-         * maxFileSize: // size in bytes
-         * callback: // url endpoint for updating file status
-         */
+    async createFileUpload(fileDetails) {
         // Link only good for 5 minutes
         const fileUploadTTL = 5 * 60;
-        const unsignedMessage = {
-            name,
-            mimeType,
-            destination,
-            maxFileSize: maxFileSize || DEFAULT_MAX_FILESIZE,
-            callback: callback || DEFAULT_CALLBACK
-        };
-        const signedMessage = await client.createSignedMessage(unsignedMessage, fileUploadTTL);
+        const signedMessage = await client.createSignedMessage(fileDetails, fileUploadTTL);
         return signedMessage;
     }
 
@@ -49,5 +27,16 @@ export default class Storage {
         const k = encodeURIComponent(key);
         const s = encodeURIComponent(signature);
         return `http://localhost:8000/v1/upload?key=${k}&signature=${s}`;
+    }
+
+    async saveFile(fileUploadRequest, fileType, fileBuffer) {
+        const {destination, name, id} = fileUploadRequest;
+        const {ext} = fileType;
+        const {path} = destination;
+        let quarantinePath = `/${QUAR_STORE}/${path}/${id}`;
+        await execCommand(`mkdir -p '${quarantinePath}'`);
+        quarantinePath = `${quarantinePath}/${name}.${ext}`;
+        fs.writeFileSync(quarantinePath, fileBuffer);
+        return quarantinePath;
     }
 }
