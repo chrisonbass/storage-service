@@ -22,7 +22,7 @@ export default class SignatureClient {
         let valid = false;
         try {
             const results = await this.decryptSignedMessage({key, signature});
-            if (results && results.message) {
+            if (results) {
                 valid = true;
             }
         } catch (e) {

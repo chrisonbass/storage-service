@@ -3,20 +3,45 @@ version: '3.7'
 services:
   storage-service:
     container_name: str
-    build: ./
+    build: 
+      context: ./Dockerfile
+      dockerfile: ./Dockerfile
+    image: storage-service
     networks:
       - storage-service-network
       - todo-app-network
+    command: "npm run debug"
+    environment:
+      - INTERNAL_PORT=3000
+      - EXTERNAL_PORT=8000
+      - DEBUG_PORT=9229
     volumes:
       - ./app:/app
       - client-storage:/client-storage 
       - quarantine-storage:/quarantine-storage
     ports:
-      - 3000:3000
-      - 8080:8080
-      - 5678:5678
-      - 9229:9229
-      - 9219:9219
+      - 8000:3000
+      - 9200:9229
+    depends_on:
+      - storage-couchbase-db
+
+  storage-worker:
+    container_name: storage-worker
+    build: ./worker
+    command: "tail -f /dev/null"
+    networks:
+      - storage-service-network
+      - todo-app-network
+    environment:
+      - INTERNAL_PORT=3000
+      - EXTERNAL_PORT=8001
+      - DEBUG_PORT=9229
+    volumes:
+      - "./worker/src:/app"
+      - quarantine-storage:/quarantine-storage
+    ports:
+      - 8001:3000
+      - 9201:9229
 
   storage-couchbase-db:
     container_name: storage-couchbase-db
@@ -26,8 +51,8 @@ services:
     volumes:
       - storage-couchbase-vol:/opt/couchbase/var
     ports:
-      - "8091-8094:8091-8094"
-      - "11210:11210"
+      - "8011-8014:8091-8094"
+      - "11200:11210"
 
 networks:
   storage-service-network:

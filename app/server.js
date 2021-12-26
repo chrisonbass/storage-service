@@ -7,7 +7,7 @@ import signedFileUploadUrlRequest from './src/validator/signedFileUploadUrlReque
 import hasValidFile from './src/validator/hasValidFile.js';
 
 const app = express();
-const port = 3000
+const port = process.env.INTERNAL_PORT || 3000;
 const hostname = '0.0.0.0';
 
 const storageController = new StorageController();

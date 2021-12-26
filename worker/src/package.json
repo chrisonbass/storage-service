@@ -1,0 +1,12 @@
+{
+  "name": "storage-worker",
+  "version": "1.0.0",
+  "description": "Worker for storage-service that scans uploads for viruses",
+  "main": "worker.js",
+  "scripts": {
+    "test": "mocha --recursive tests"
+  },
+  "author": "Chris Moss",
+  "license": "ISC",
+  "type": "module"
+}

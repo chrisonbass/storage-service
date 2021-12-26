@@ -37,10 +37,10 @@ export default class Storage {
 
     async handleFileUpload(req, res) {
         try {
-            const {unsignedMessage} = req.params;
-            const fileUploadRequest = FileUploadRequest.getById(unsignedMessage.id);
+            const {unsignedMessage, fileType} = req.params;
+            const fileUploadRequest = await FileUploadRequest.getById(unsignedMessage.id);
             if (fileUploadRequest) {
-                const savedPath = await service.saveFile(fileUploadRequest, req.body);
+                const savedPath = await service.saveFile(fileUploadRequest, fileType, req.body);
                 if (savedPath) {
                     fileUploadRequest.status = FileUploadStatus.READY_FOR_SCAN;
                     fileUploadRequest.path = savedPath;

@@ -7,6 +7,8 @@ const client = new SignatureClient();
 const QUAR_STORE = "quarantine-storage";
 const CLIENT_STORE = "client-storage";
 
+const EXTERNAL_PORT = process.env.EXTERNAL_PORT || "8000";
+
 export default class Storage {
     /**
      * Creates a signed url that can be used for 
@@ -26,17 +28,20 @@ export default class Storage {
     getSignedFileUploadUrlFromSignature({key, signature}){
         const k = encodeURIComponent(key);
         const s = encodeURIComponent(signature);
-        return `http://localhost:8000/v1/upload?key=${k}&signature=${s}`;
+        return `http://localhost:${EXTERNAL_PORT}/v1/upload?key=${k}&signature=${s}`;
     }
 
     async saveFile(fileUploadRequest, fileType, fileBuffer) {
-        const {destination, name, id} = fileUploadRequest;
+        const {name, id} = fileUploadRequest;
         const {ext} = fileType;
-        const {path} = destination;
-        let quarantinePath = `/${QUAR_STORE}/${path}/${id}`;
-        await execCommand(`mkdir -p '${quarantinePath}'`);
-        quarantinePath = `${quarantinePath}/${name}.${ext}`;
-        fs.writeFileSync(quarantinePath, fileBuffer);
+        let quarantinePath = `/${QUAR_STORE}/${id}`;
+        try {
+            await execCommand(`mkdir -p '${quarantinePath}'`);
+            quarantinePath = `${quarantinePath}/${name}.${ext}`;
+            fs.writeFileSync(quarantinePath, fileBuffer);
+        } catch (e) {
+            console.error("Error saving file to quarantine path", e);
+        }
         return quarantinePath;
     }
 }
