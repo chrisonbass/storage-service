@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { fileTypeFromBuffer } from 'file-type';
 import execCommand from '../util/execCommand.js';
 import SignatureClient from './SignatureClient.js';
 
@@ -43,5 +44,35 @@ export default class Storage {
             console.error("Error saving file to quarantine path", e);
         }
         return quarantinePath;
+    }
+
+    async moveFileToClientStorage(fileUploadRequest) {
+        const {fullPath, destination, name} = fileUploadRequest;
+        const {bucket, path} = destination;
+        const fileBuffer = fs.readFileSync(fullPath);
+        const type = await fileTypeFromBuffer(fileBuffer);
+        const filePath = `/${CLIENT_STORE}/${bucket}/${path}/${name}.${type.ext}`;
+        const destinationPath = filePath.substring(0, filePath.lastIndexOf("/"));
+        const mkdirRes = await execCommand(`mkdir -p '${destinationPath}'`);
+        fs.writeFileSync(filePath, fileBuffer);
+        if (fs.existsSync(filePath)) {
+            // removed quarantined path
+            fs.unlinkSync(fullPath);
+            return filePath;
+        }
+        return false;
+    }
+
+    async outputFile({bucket, path}) {
+        const filePath = `/${CLIENT_STORE}/${bucket}/${path}`;
+        if (fs.existsSync(filePath)) {
+            const buffer = fs.readFileSync(filePath);
+            const fileType = await fileTypeFromBuffer(buffer);
+            return {
+                fileType,
+                fileBuffer: buffer
+            };
+        }
+        return null;
     }
 }

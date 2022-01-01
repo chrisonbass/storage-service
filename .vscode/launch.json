@@ -22,7 +22,7 @@
             "remoteRoot": "/app",
             "port": 9201,
             "address": "localhost",
-            "localRoot": "${workspaceFolder}/app/worker/src",
+            "localRoot": "${workspaceFolder}/worker/src",
             "protocol": "inspector",
             "restart": true
         } 

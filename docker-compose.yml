@@ -4,7 +4,7 @@ services:
   storage-service:
     container_name: str
     build: 
-      context: ./Dockerfile
+      context: ./
       dockerfile: ./Dockerfile
     image: storage-service
     networks:
@@ -23,11 +23,14 @@ services:
       - 8000:3000
       - 9200:9229
     depends_on:
-      - storage-couchbase-db
+      - storage-service-db
 
   storage-worker:
     container_name: storage-worker
-    build: ./worker
+    build: 
+      context: ./worker/
+      dockerfile: ./Dockerfile
+    image: storage-worker
     command: "tail -f /dev/null"
     networks:
       - storage-service-network
@@ -42,17 +45,22 @@ services:
     ports:
       - 8001:3000
       - 9201:9229
+    depends_on:
+      - storage-service
 
-  storage-couchbase-db:
-    container_name: storage-couchbase-db
-    image: couchbase
+  storage-service-db:
+    container_name: storage-service-db
+    image: postgres:13.5-alpine
     networks:
       - storage-service-network
     volumes:
-      - storage-couchbase-vol:/opt/couchbase/var
+      - storage-service-db-vol:/var/lib/postgresql/data
     ports:
-      - "8011-8014:8091-8094"
-      - "11200:11210"
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=file_storage
+      - POSTGRES_USER=file_user
+      - POSTGRES_PASSWORD=test1234
 
 networks:
   storage-service-network:
@@ -61,8 +69,8 @@ networks:
     name: todo-app-network
 
 volumes:
-  storage-couchbase-vol:
-    name: storage-couchbase-vol
+  storage-service-db-vol:
+    name: storage-service-db-vol
   client-storage: 
     name: client-storage
   quarantine-storage: 

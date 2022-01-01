@@ -6,9 +6,16 @@ import * as FileUploadStatus from '../model/FileUploadStatus.js';
 const service = new StorageService();
 
 export default class Storage {
-    constructor(){ 
+    constructor(dao){ 
+        this.dao = dao;
+
+        // bind methods for use as express middleware
         this.getFileUploadSignedUrl = this.getFileUploadSignedUrl.bind(this);
         this.handleFileUpload = this.handleFileUpload.bind(this);
+        this.getFile = this.getFile.bind(this);
+        this.getFileDetails = this.getFileDetails.bind(this);
+        this.queryFiles = this.queryFiles.bind(this);
+        this.updateFile = this.updateFile.bind(this);
     }
 
     async getFileUploadSignedUrl(req, res) {
@@ -16,10 +23,10 @@ export default class Storage {
             let fileUploadRequest = new FileUploadRequest(req.body);
             const signedUploadUrl = await service.getSignedFileUploadUrl(fileUploadRequest.getSignatureMessage());
             if (signedUploadUrl) {
-                const saveResult = await fileUploadRequest.save();
+                const saveResult = await this.dao.create(fileUploadRequest);
                 if (saveResult) {
                     return res.send({
-                        ...fileUploadRequest,
+                        fileUploadRequest: saveResult,
                         uploadUrl: signedUploadUrl
                     });
                 }
@@ -38,14 +45,16 @@ export default class Storage {
     async handleFileUpload(req, res) {
         try {
             const {unsignedMessage, fileType} = req.params;
-            const fileUploadRequest = await FileUploadRequest.getById(unsignedMessage.id);
+            const fileUploadRequest = await this.dao.getById(unsignedMessage.id);
+            const updated = new FileUploadRequest({...fileUploadRequest});
             if (fileUploadRequest) {
                 const savedPath = await service.saveFile(fileUploadRequest, fileType, req.body);
                 if (savedPath) {
-                    fileUploadRequest.status = FileUploadStatus.READY_FOR_SCAN;
-                    fileUploadRequest.path = savedPath;
-                    fileUploadRequest.save();
-                    return res.send(fileUploadRequest);
+                    updated.status = FileUploadStatus.READY_FOR_SCAN;
+                    updated.fullPath = savedPath;
+                    const updateResult = await this.dao.update(fileUploadRequest, updated)
+                    return res.send(updateResult);
+
                 }
             }
             respondWithCode(res, 400, {
@@ -59,4 +68,83 @@ export default class Storage {
             });
        }
     }
+
+    async getFileDetails(req, res) {
+        res.send(req.params.fileUploadRequest);
+    }
+
+    async getFile(req, res) {
+        try {
+            const {bucket_name, path} = (req.params || {});
+            console.log("get file request", {bucket_name, path});
+            const fileDetails = await service.outputFile({
+                bucket: bucket_name,
+                path
+            });
+            const {fileType, fileBuffer} = fileDetails || {};
+            if (fileBuffer && fileType && fileType.mime) {
+                res.setHeader("Content-Type", fileType.mime);
+                return res.send(fileBuffer);
+            }
+            return respondWithCode(res, 404);
+        } catch (e) {
+            respondWithCode(res, 400, {
+                message: "Error getting file",
+                error: e
+            });
+        }
+    }
+
+    async queryFiles(req, res) {
+        const {
+            status
+        } = req.query || {};
+        if (status) {
+            const fileUploadRequests = await this.dao.filterByStatus({status});
+            return res.send(fileUploadRequests || []);
+        }
+        respondWithCode(res, 400, {
+            message: "Invalid request"
+        });
+    }
+
+    async updateFile(req, res) {
+        const {body} = req;
+        const {fileUploadRequest} = req.params;
+        const updatedRequest = new FileUploadRequest({
+            ...fileUploadRequest,
+            ...{
+                status: body.status || fileUploadRequest.status
+            },
+            lastModified: new Date().toLocaleString()
+        });
+        const updatedFile = await this.dao.update(fileUploadRequest, updatedRequest);
+        if (updatedFile) {
+            if (
+                fileUploadRequest.status === FileUploadStatus.READY_FOR_SCAN && 
+                updatedFile.status === FileUploadStatus.SCAN_COMPLETE
+            ) {
+                const updatedPath = await service.moveFileToClientStorage(updatedFile);
+                if (updatedPath) {
+                    const movedResult = await this.dao.update(
+                        updatedFile,
+                        new FileUploadRequest({
+                            ...updatedFile,
+                            fullPath: updatedPath,
+                            status: FileUploadStatus.AVAILABE,
+                        })
+                    );
+                    if (movedResult) {
+                        return res.send(movedResult);
+                    }
+                }
+            }
+            return res.send(updatedFile);
+        }
+        respondWithCode(res, 400, {
+            message: "Invalid request"
+        });
+    }
 }
+
+// http://storage-service:3000/v1/bucket/image-bucket/test-uploads/images/3-belly-rubs.jpg
