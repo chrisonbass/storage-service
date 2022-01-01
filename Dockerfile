@@ -9,14 +9,9 @@ COPY ./app /app
 WORKDIR /app
 
 RUN npm install -g express mocha file-type nodemon;
-    # npm install -g mocha; \
-    # npm install -g couchbase; \
 
 ENV DEBUG_PORT=${DEBUG_PORT}
 ENV INTERNAL_PORT=${INTERNAL_PORT}
 ENV EXTERNAL_PORT=${EXTERNAL_PORT}}
 
-# ENTRYPOINT [ "npm", "run", "debug" ]
-
-# docker build --tag storage-service .
-# docker run -v ~/personal/storage-service/app:/app --rm -dit --name str storage-service
+ENTRYPOINT [ "npm", "run", "debug" ]

@@ -7,17 +7,14 @@ ARG EXTERNAL_PORT=3000
 COPY ./src /app
 
 RUN apt-get update; \
-    apt-get upgrade -y;
-
-RUN apt-get install clamav -y
+    apt-get install clamav -y
 
 WORKDIR /app
 
-RUN npm install -g mocha; \
-    npm install -g nodemon;
+RUN npm install -g mocha nodemon;
 
 ENV DEBUG_PORT=${DEBUG_PORT}
 ENV INTERNAL_PORT=${INTERNAL_PORT}
 ENV EXTERNAL_PORT=${EXTERNAL_PORT}}
 
-# ENTRYPOINT [ "nodemon", "worker.js" ]
+ENTRYPOINT [ "nodemon", "--inspect=0.0.0.0:${DEBUG_PORT}", "worker.js" ]

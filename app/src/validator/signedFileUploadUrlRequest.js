@@ -17,7 +17,7 @@ const signedFileUploadUrlRequest = (req, res, next) => {
     const {name, mimeType, destination} = body || {};
     if (!name || !mimeType || !destination) {
         return respondWithCode(res, 400, {
-            message: "One or more required fields are missing: `name`, `description`, or `destination`"
+            message: "One or more required fields are missing: `name`, `mimeType`, or `destination`"
         });
     }
     if (!isValidMimeType(mimeType)) {
