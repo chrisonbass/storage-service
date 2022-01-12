@@ -4,9 +4,14 @@
   "description": "Worker for storage-service that scans uploads for viruses",
   "main": "worker.js",
   "scripts": {
+    "predebug": "npm install",
+    "debug": "node --inspect=0.0.0.0:$DEBUG_PORT worker.js",
     "test": "mocha --recursive tests"
   },
   "author": "Chris Moss",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "server-utils": "github:chrisonbass/server-utils#main"
+  }
 }

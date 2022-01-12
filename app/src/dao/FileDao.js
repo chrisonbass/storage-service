@@ -91,6 +91,23 @@ export default class FileDao {
     return null;
   }
 
+  async delete(current) {
+    if (current && current.id) {
+      try {
+        const result = await this.client.query(`
+          DELETE FROM  
+            file_request 
+          WHERE 
+            id = $1::uuid
+        `, [current.id]);
+        return result && result.rowCount ? true : false;
+      } catch (e) {
+        console.error("Error delete file from db", e);
+        return null;
+      }
+    }
+ }
+
   async update(current, updated) {
     const id = current.id;
     const name = updated.name || current.name;

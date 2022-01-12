@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { readdir, rmdir } from 'fs/promises';
 import { fileTypeFromBuffer } from 'file-type';
 import execCommand from '../util/execCommand.js';
 import SignatureClient from './SignatureClient.js';
@@ -74,5 +75,36 @@ export default class Storage {
             };
         }
         return null;
+    }
+
+    async deleteFileAndEmptyParentFolders(filePath) {
+        let parentFolder = `${filePath}`.substring(0, filePath.lastIndexOf('/'));
+        const removeEmptyParent = async () => {
+            let files;
+            try {
+                files = await readdir(parentFolder);
+            } catch (e) {
+                return;
+            }
+            if (files.length) {
+                return;
+            }
+            try {
+                await rmdir(parentFolder);
+            } catch (e) {
+                return;
+            }
+            parentFolder = parentFolder.substring(0, parentFolder.lastIndexOf('/'));
+            if (parentFolder === `/${CLIENT_STORE}`) {
+                return;
+            }
+            removeEmptyParent();
+        };
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            await removeEmptyParent();
+            return !fs.existsSync(filePath);
+        } 
+        return true;
     }
 }

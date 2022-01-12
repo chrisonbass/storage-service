@@ -20,23 +20,16 @@ export default class FileUploadRequest {
         this.destination = destination && destination.bucket && destination.path ? destination : {bucket: null, path: null};
         this.status = status || FileUploadStatus.REQUESTED;
         this.fullPath = fullPath || null;
+
+        this.fileName = this.fullPath ? this.fullPath.substr(this.fullPath.lastIndexOf("/") + 1) : null;
+        this.publicPath = this.fileName && this.destination ? `/bucket/${this.destination.bucket}/${this.destination.path}/${this.fileName}` : null;
+
         this.dateCreated = dateCreated ? new Date(dateCreated) : null;
         this.callback = callback || null;
         this.maxFileSize = maxFileSize || DEFAULT_MAX_FILESIZE;
         if (this.maxFileSize > DEFAULT_MAX_FILESIZE) {
             this.maxFileSize = DEFAULT_MAX_FILESIZE;
         }
-    }
-
-    // Static Methods
-    static async getById(id) {
-        return new Promise((resolve, reject) => {
-            if (temp_db[id]) {
-                resolve(temp_db[id]);
-            } else {
-                reject();
-            }
-        });
     }
 
     // Instance Methods

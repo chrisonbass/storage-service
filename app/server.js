@@ -53,6 +53,12 @@ const main = async () => {
     createParentPath: true
   }));
 
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
+    return next();
+  });
+
   // Start Routes
   app.get('/health-check', (req, res) => {
     res.send("works");
@@ -75,13 +81,18 @@ const main = async () => {
 
   const bucketRouter = express.Router();
   bucketRouter.route('/:bucket_name/*')
-      // outputs the file 
+      // outputs the file binary
       .get(hasBucketNameAndPath, storageController.getFile);
 
   const fileRouter = express.Router();
   fileRouter
+    // get file details
     .get('/:id', isValidFileUpdateRequest(fileDao), storageController.getFileDetails)
+    // queries files, only for worker
     .get('/', isWorker, storageController.queryFiles)
+    // removes file
+    .delete('/:id', isValidFileUpdateRequest(fileDao), storageController.deleteFile)
+    // update file details, only for worker
     .post('/:id', isWorker, isValidFileUpdateRequest(fileDao), storageController.updateFile);
 
   const version1Routes = express.Router();

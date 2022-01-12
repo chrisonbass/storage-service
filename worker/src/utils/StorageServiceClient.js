@@ -1,4 +1,8 @@
-import {get, post} from './request.js';
+import serverUtils from 'server-utils';
+
+const {callApi} = serverUtils;
+
+console.log("imports", {callApi});
 
 export default class StorageServiceClient {
   constructor({
@@ -16,7 +20,7 @@ export default class StorageServiceClient {
       const check = async () => {
         count++;
         try {
-          const result = await get(`${s.host}:${s.port}/health-check`);
+          const callApiResult = await callApi(`${s.host}:${s.port}/health-check`);
           resolve(true);
         } catch (e) {
           if (check < 3) {
@@ -33,12 +37,12 @@ export default class StorageServiceClient {
   async getFilesReadyToScan() {
     const searchQuery = `status=${decodeURIComponent("ready_for_scan")}`
     try {
-      const files = await get(`${this.host}:${this.port}/v1/files?${searchQuery}`, {
+      const files = await callApi(`${this.host}:${this.port}/v1/files?${searchQuery}`, {
         headers: {
           "authorization" : "worker-api-key-001"
         }
       });
-      return JSON.parse(files);
+      return files;
     } catch (e) {
       console.error("Error getting unscanned files", e);
       return [];
@@ -47,14 +51,16 @@ export default class StorageServiceClient {
 
   async updateFileStatus({id}, status) {
     try {
-      const result = await post(`${this.host}:${this.port}/v1/files/${id}`,{
-        status
-      }, {
+      const updateFileStatusResult = await callApi(`${this.host}:${this.port}/v1/files/${id}`, {
+        method: "POST",
         headers: {
           authorization: "worker-api-key-001"
+        },
+        body: {
+          status
         }
       });
-      return true;
+      return updateFileStatusResult;
     } catch(e) {
       console.error("Error updating file", e);
     }

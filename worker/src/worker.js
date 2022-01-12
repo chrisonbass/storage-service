@@ -1,8 +1,9 @@
 // /quarantine-storage/test-uploads/images/296720af-2aa0-494f-bcb9-3d9dcceefb41/
-import {get} from './utils/request.js';
 import fs from 'fs';
-import execCommand from "./utils/execCommand.js";
+import serverUtils from 'server-utils';
 import StorageServiceClient from './utils/StorageServiceClient.js';
+
+const {execCommand} = serverUtils;
 
 const client = new StorageServiceClient();
 
@@ -41,6 +42,8 @@ async function main() {
         let scanCompleted = undefined;
         let virusFound = undefined;
         try {
+          const markAsScanningResult = await client.updateFileStatus({id: files[0]?.id}, "scanning");
+          console.log("Marking as scanning", {markAsScanningResult})
           result = await execCommand(`clamscan --remove=yes ${file} | grep 'Infected files:' -`);
           result = `${result}`.trim().match(/Infected files: (\d+)/);
           if (result && result[1]) {

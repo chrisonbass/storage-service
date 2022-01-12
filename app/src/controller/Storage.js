@@ -16,6 +16,7 @@ export default class Storage {
         this.getFileDetails = this.getFileDetails.bind(this);
         this.queryFiles = this.queryFiles.bind(this);
         this.updateFile = this.updateFile.bind(this);
+        this.deleteFile = this.deleteFile.bind(this);
     }
 
     async getFileUploadSignedUrl(req, res) {
@@ -52,7 +53,7 @@ export default class Storage {
                 if (savedPath) {
                     updated.status = FileUploadStatus.READY_FOR_SCAN;
                     updated.fullPath = savedPath;
-                    const updateResult = await this.dao.update(fileUploadRequest, updated)
+                    const updateResult = await this.dao.update(fileUploadRequest, updated);
                     return res.send(updateResult);
 
                 }
@@ -121,7 +122,7 @@ export default class Storage {
         const updatedFile = await this.dao.update(fileUploadRequest, updatedRequest);
         if (updatedFile) {
             if (
-                fileUploadRequest.status === FileUploadStatus.READY_FOR_SCAN && 
+                fileUploadRequest.status !== FileUploadStatus.SCAN_COMPLETE && 
                 updatedFile.status === FileUploadStatus.SCAN_COMPLETE
             ) {
                 const updatedPath = await service.moveFileToClientStorage(updatedFile);
@@ -144,6 +145,19 @@ export default class Storage {
         respondWithCode(res, 400, {
             message: "Invalid request"
         });
+    }
+
+    async deleteFile(req, res) {
+        const {id} = req.params;
+        const fileDetails = await this.dao.getById(id);
+        if (fileDetails && fileDetails.id) {
+            const isDeleted = await service.deleteFileAndEmptyParentFolders(fileDetails.fullPath);
+            if (isDeleted) {
+                await this.dao.delete(fileDetails);
+                return respondWithCode(res, 204);
+            }
+        }
+        respondWithCode(res, 400);
     }
 }
 

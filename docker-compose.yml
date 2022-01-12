@@ -31,7 +31,6 @@ services:
       context: ./worker/
       dockerfile: ./Dockerfile
     image: storage-worker
-    command: "tail -f /dev/null"
     networks:
       - storage-service-network
       - todo-app-network

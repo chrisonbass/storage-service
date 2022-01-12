@@ -17,4 +17,4 @@ ENV DEBUG_PORT=${DEBUG_PORT}
 ENV INTERNAL_PORT=${INTERNAL_PORT}
 ENV EXTERNAL_PORT=${EXTERNAL_PORT}}
 
-ENTRYPOINT [ "nodemon", "--inspect=0.0.0.0:${DEBUG_PORT}", "worker.js" ]
+ENTRYPOINT [ "npm", "run", "debug" ]
