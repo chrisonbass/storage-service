@@ -1,4 +1,6 @@
-import respondWithCode from "../util/respondWithCode.js";
+import ServerUtils from "server-utils";
+
+const {respondWithCode} = ServerUtils;
 
 export default function hasBucketNameAndPath(req, res, next) {
   let error;

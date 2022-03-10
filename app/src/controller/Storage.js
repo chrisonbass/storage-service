@@ -1,7 +1,9 @@
-import respondWithCode from '../util/respondWithCode.js';
+import ServerUtils from "server-utils";
 import FileUploadRequest from '../model/FileUploadRequest.js';
 import StorageService from '../service/Storage.js'
 import * as FileUploadStatus from '../model/FileUploadStatus.js';
+
+const {respondWithCode} = ServerUtils;
 
 const service = new StorageService();
 
@@ -17,11 +19,22 @@ export default class Storage {
         this.queryFiles = this.queryFiles.bind(this);
         this.updateFile = this.updateFile.bind(this);
         this.deleteFile = this.deleteFile.bind(this);
+        this.getScannableFiles = this.getScannableFiles.bind(this);
+    }
+
+    async getScannableFiles(req, res) {
+        const fileUploadRequests = await this.dao.filterByStatus({
+            status: FileUploadStatus.READY_FOR_SCAN
+        });
+        return res.send(fileUploadRequests || []);
     }
 
     async getFileUploadSignedUrl(req, res) {
         try {
             let fileUploadRequest = new FileUploadRequest(req.body);
+            if (req.user) {
+                fileUploadRequest.createdBy = req.user.sub;
+            }
             const signedUploadUrl = await service.getSignedFileUploadUrl(fileUploadRequest.getSignatureMessage());
             if (signedUploadUrl) {
                 const saveResult = await this.dao.create(fileUploadRequest);
@@ -101,7 +114,11 @@ export default class Storage {
             status
         } = req.query || {};
         if (status) {
-            const fileUploadRequests = await this.dao.filterByStatus({status});
+            const createdBy = (req.user || {}).sub;
+            const fileUploadRequests = await this.dao.filterUserFiles({
+                createdBy,
+                status
+            });
             return res.send(fileUploadRequests || []);
         }
         respondWithCode(res, 400, {

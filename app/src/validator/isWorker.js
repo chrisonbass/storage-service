@@ -1,10 +1,9 @@
-import respondWithCode from "../util/respondWithCode.js";
+import ServerUtils from "server-utils";
 
-const apiKey = process.env.WORKER_API_KEY || "worker-api-key-001";
+const {respondWithCode} = ServerUtils;
 
 export default function isWorker(req, res, next) {
-  const {authorization} = req.headers || {};
-  if (authorization === apiKey) {
+  if (req.isWorker) {
     return next();
   }
   respondWithCode(res, 403, "ACCESS DENIED");

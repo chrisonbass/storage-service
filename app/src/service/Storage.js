@@ -1,8 +1,10 @@
 import fs from 'fs';
 import { readdir, rmdir } from 'fs/promises';
 import { fileTypeFromBuffer } from 'file-type';
-import execCommand from '../util/execCommand.js';
+import ServerUtils from "server-utils";
 import SignatureClient from './SignatureClient.js';
+
+const {execCommand} = ServerUtils;
 
 const client = new SignatureClient();
 
@@ -39,7 +41,7 @@ export default class Storage {
         let quarantinePath = `/${QUAR_STORE}/${id}`;
         try {
             await execCommand(`mkdir -p '${quarantinePath}'`);
-            quarantinePath = `${quarantinePath}/${name}.${ext}`;
+            quarantinePath = `${quarantinePath}/${name.substring(0, name.lastIndexOf("."))}.${ext}`;
             fs.writeFileSync(quarantinePath, fileBuffer);
         } catch (e) {
             console.error("Error saving file to quarantine path", e);

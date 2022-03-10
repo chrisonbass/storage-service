@@ -35,11 +35,10 @@ export default class StorageServiceClient {
   }
 
   async getFilesReadyToScan() {
-    const searchQuery = `status=${decodeURIComponent("ready_for_scan")}`
     try {
-      const files = await callApi(`${this.host}:${this.port}/v1/files?${searchQuery}`, {
+      const files = await callApi(`${this.host}:${this.port}/v1/files/scannable`, {
         headers: {
-          "authorization" : "worker-api-key-001"
+          "Authorization" : "worker-api-key-001"
         }
       });
       return files;
