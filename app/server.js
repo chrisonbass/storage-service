@@ -10,6 +10,8 @@ import hasBucketNameAndPath from './src/validator/hasBucketNameAndPath.js';
 import FileDao from './src/dao/FileDao.js';
 import isWorker from './src/validator/isWorker.js';
 import isValidFileUpdateRequest from './src/validator/isValidFileUpdateRequest.js';
+import authenticateUser from './src/middleware/authenticateUser.js';
+import isAuthenticated from './src/validator/isAuthenticated.js';
 
 const app = express();
 const port = process.env.INTERNAL_PORT || 3000;
@@ -56,8 +58,12 @@ const main = async () => {
   app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Headers", "*");
+    res.setHeader("Access-Control-Allow-Methods", "OPTIONS,GET,POST,PUT");
     return next();
   });
+
+  // Authenticates users and workers
+  app.use(authenticateUser);
 
   // Start Routes
   app.get('/health-check', (req, res) => {
@@ -67,7 +73,7 @@ const main = async () => {
   const uploadRouter = express.Router();
   uploadRouter.route('/')
     // Request file upload signed url
-    .post(signedFileUploadUrlRequest, storageController.getFileUploadSignedUrl)
+    .post(isAuthenticated, signedFileUploadUrlRequest, storageController.getFileUploadSignedUrl)
     // Upload using Signed Url
     .put(
       // Authenticate signed url
@@ -86,10 +92,12 @@ const main = async () => {
 
   const fileRouter = express.Router();
   fileRouter
+    // queries files that are ready for scanning
+    .get('/scannable', isWorker, storageController.getScannableFiles)
     // get file details
     .get('/:id', isValidFileUpdateRequest(fileDao), storageController.getFileDetails)
-    // queries files, only for worker
-    .get('/', isWorker, storageController.queryFiles)
+    // queries files that below to a user
+    .get('/', isAuthenticated, storageController.queryFiles)
     // removes file
     .delete('/:id', isValidFileUpdateRequest(fileDao), storageController.deleteFile)
     // update file details, only for worker

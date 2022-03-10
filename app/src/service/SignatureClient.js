@@ -1,4 +1,6 @@
-import callApi from "../util/callApi.js";
+import ServerUtils from "server-utils";
+
+const {callApi} = ServerUtils;
 
 const BASE_URL = process.env.SIGNATURE_SERVICE_URL || "http://signature-service:3000";
 const DEFAULT_TTL = 60 * 60 * 24;

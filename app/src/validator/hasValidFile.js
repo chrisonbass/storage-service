@@ -1,6 +1,8 @@
 import {fileTypeFromBuffer} from 'file-type';
+import ServerUtils from "server-utils";
 import {isValidMimeType} from "../config/mimeTypes.js";
-import respondWithCode from "../util/respondWithCode.js";
+
+const {respondWithCode} = ServerUtils;
 
 // helper function to responsd with error
 const sendError = (res, message) => {

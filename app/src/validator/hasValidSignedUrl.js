@@ -1,5 +1,7 @@
-import respondWithCode from "../util/respondWithCode.js";
+import ServerUtils from "server-utils";
 import SignatureClient from "../service/SignatureClient.js";
+
+const {respondWithCode} = ServerUtils;
 
 const signatureClient = new SignatureClient();
 

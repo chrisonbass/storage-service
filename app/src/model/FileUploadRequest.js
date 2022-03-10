@@ -10,6 +10,7 @@ export default class FileUploadRequest {
         destination, 
         status, 
         fullPath, 
+        createdBy,
         dateCreated,
         callback, 
         maxFileSize} = {}
@@ -23,6 +24,8 @@ export default class FileUploadRequest {
 
         this.fileName = this.fullPath ? this.fullPath.substr(this.fullPath.lastIndexOf("/") + 1) : null;
         this.publicPath = this.fileName && this.destination ? `/bucket/${this.destination.bucket}/${this.destination.path}/${this.fileName}` : null;
+
+        this.createdBy = createdBy || null;
 
         this.dateCreated = dateCreated ? new Date(dateCreated) : null;
         this.callback = callback || null;

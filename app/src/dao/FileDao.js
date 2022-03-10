@@ -24,6 +24,7 @@ export default class FileDao {
             path: row.destination_path
           },
           status: row.file_status,
+          createdBy: row.created_by,
           fullPath: row.full_path,
           dateCreated: new Date(row.date_created),
           lastModified: row.last_modified ? new Date(row.last_modified) : undefined
@@ -35,7 +36,7 @@ export default class FileDao {
     return null;
   }
 
-  async create({id, name, mimeType, destination, status, fullPath}) {
+  async create({id, name, mimeType, destination, status, fullPath, createdBy = null}) {
     const {bucket, path} = destination || {};
     try {
       const dateNow = new Date().toLocaleString();
@@ -49,6 +50,7 @@ export default class FileDao {
           destination_bucket, 
           destination_path, 
           full_path,
+          created_by, 
           date_created, 
           last_modified
         ) VALUES(
@@ -59,8 +61,9 @@ export default class FileDao {
           $5::varchar,  /* destination_bucket */
           $6::varchar,  /* destination_path */
           $7::varchar,  /* full_path */
-          $8::timestamp,  /* date_created */
-          $9::timestamp   /* last_modified */
+          $8::uuid,  /* created_by */
+          $9::timestamp,  /* date_created */
+          $10::timestamp   /* last_modified */
         )`,
       [
         id, 
@@ -70,6 +73,7 @@ export default class FileDao {
         bucket, 
         path, 
         fullPath,
+        createdBy,
         dateNow, 
         dateNow 
       ]);
@@ -81,6 +85,7 @@ export default class FileDao {
           destination,
           status,
           fullPath,
+          createdBy,
           dateCreated: dateNow,
           lastModified: dateNow
         });
@@ -194,4 +199,47 @@ export default class FileDao {
     }
     return null;
   }
+
+  async filterUserFiles({status, createdBy, limit = 30, offset = 0}) {
+    try {
+      let params = [createdBy];
+      if (status) {
+        params.push(status);
+      }
+      const query = `
+        SELECT * 
+        FROM ${this.table}
+        WHERE created_by = $1::uuid 
+        ${(status ? ' AND file_status = $' + params.length + '::varchar' : '')}
+        ORDER BY date_created ASC
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+      `;
+      params.push(limit);
+      params.push(offset);
+      const result = await this.client.query(query, params);
+      const rows = result && result.rows;
+      if (Array.isArray(rows)) {
+        return rows.map((row) => new FileUploadRequest({
+          id: row.id,
+          name: row.file_name,
+          mimeType: row.mime_type,
+          destination: {
+            bucket: row.destination_bucket,
+            path: row.destination_path
+          },
+          status: row.file_status,
+          fullPath: row.full_path,
+          createdBy: row.created_by,
+          dateCreated: row.date_created,
+          lastModified: row.last_modified
+        }));
+      }
+    } catch (e) {
+      console.error("Error getting file_request by status", e);
+    }
+    return null;
+  }
+
+
+
 }

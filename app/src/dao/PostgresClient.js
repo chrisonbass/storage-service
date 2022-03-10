@@ -53,6 +53,7 @@ const initializeTables = async (client) => {
           destination_path varchar,
           file_status varchar NOT NULL,
           full_path varchar,
+          created_by uuid,
           date_created timestamp,
           last_modified timestamp default current_timestamp,
           UNIQUE(id)
